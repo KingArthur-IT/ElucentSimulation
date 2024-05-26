@@ -1,0 +1,86 @@
+# 3ds Max Wavefront OBJ Exporter v0.99 - (c)2007 guruware
+# File Created: 24.05.2024 14:18:28
+
+newmtl Material__88
+	Ns 25.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 1.0000 1.0000 1.0000
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.3150 0.3150 0.3150
+	Ke 1.0000 1.0000 1.0000
+	map_Ka Drape_05.png
+	map_Kd Drape_05.png
+
+newmtl Material__83
+	Ns 25.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 1.0000 1.0000 1.0000
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.3150 0.3150 0.3150
+	Ke 1.0000 1.0000 1.0000
+	map_Ka skin female_01.png
+	map_Kd skin female_01.png
+
+newmtl Material__85
+	Ns 25.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 1.0000 1.0000 1.0000
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.3150 0.3150 0.3150
+	Ke 1.0000 1.0000 1.0000
+	map_Ka Drape_02.png
+	map_Kd Drape_02.png
+
+newmtl Material__86
+	Ns 25.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 1.0000 1.0000 1.0000
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.3150 0.3150 0.3150
+	Ke 1.0000 1.0000 1.0000
+	map_Ka Drape_03.png
+	map_Kd Drape_03.png
+
+newmtl Material__87
+	Ns 25.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 1.0000 1.0000 1.0000
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.3150 0.3150 0.3150
+	Ke 1.0000 1.0000 1.0000
+	map_Ka Drape_04.png
+	map_Kd Drape_04.png
+
+newmtl Material__84
+	Ns 25.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 1.0000 1.0000 1.0000
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.3150 0.3150 0.3150
+	Ke 1.0000 1.0000 1.0000
+	map_Ka Drape_01.png
+	map_Kd Drape_01.png
