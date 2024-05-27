@@ -1,97 +1,82 @@
 import * as THREE from 'three';
+//modules import
+import { settings3D } from './modules/settings'
+import { addFBXObjectToScene } from './modules/addObjects'
+
+var canvas, scene, camera, renderer, 
+scene3DScene = {
+    width: 300,
+    height: 450,
+}
 
 class App {
     init() {
-//         canvas = document.getElementById('main3DCanvas');
-//         const canvasWrapper = document.getElementById('canvasWrapper')
-//         sceneSize.width = canvasWrapper.getBoundingClientRect().width
-//         sceneSize.height =  sceneSize.width / settings.aspectRatio
+        BovieSceneInit();
+        // addBovieSceneObjects();
+        addFBXObjectToScene(
+            scene,
+            settings3D.bovieModel.fileName,
+            settings3D.bovieModel.modelPath,
+            settings3D.bovieModel.name,
+            settings3D.bovieModel.position,
+            settings3D.bovieModel.scale,
+            settings3D.bovieModel.rotation,
+        );
+        addFBXObjectToScene(
+            scene,
+            settings3D.bodyModel.fileName,
+            settings3D.bodyModel.modelPath,
+            settings3D.bodyModel.name,
+            settings3D.bodyModel.position,
+            settings3D.bodyModel.scale,
+            settings3D.bodyModel.rotation,
+        );
 
-//         canvas.width = sceneSize.width;
-//         canvas.height = sceneSize.height;
+        // window.addEventListener('resize', onCanvasResize)
 
-//         scene = new THREE.Scene();
-//         camera = new THREE.PerspectiveCamera( 45, sceneSize.width / sceneSize.height, 0.1, settings.camera.deep );
-//         camera.position.y = settings.camera.posY;
-//         camera.position.z = settings.camera.posZ;
-//         scene.add(camera)
-
-//         //lights
-//         const light = new THREE.AmbientLight(0xffffff, 1.0);
-//         light.position.set(0, 0, 0);
-//         scene.add(light);
-
-//         renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-//         // renderer.setClearColor( 0x000000, 0 );
-//         renderer.setPixelRatio( Math.min(window.devicePixelRatio, 1.5) );
-//         renderer.setSize( sceneSize.width, sceneSize.height );
-
-//         //obj
-//         EarthObj = new THREE.Object3D();
-//         const objLoader = new OBJLoader();
-
-//         const redMaterial = new THREE.MeshPhongMaterial({
-//             color: 15017491,
-//             shininess: .75,
-//             transparent: false,
-//             emissive: 15017491,
-//             emissiveIntensity: 1
-//         });
-
-//         const whiteMaterial = new THREE.MeshPhongMaterial({
-//             color: '#cccccc',
-//         });
-
-//         // objLoader.setMaterials(materials);
-//         objLoader.load('./assets/EARTH-f.obj', function (object) {
-//             const scale = 2.2
-//             object.scale.set(scale, scale, scale);
-//             object.position.set(0, 0, 0);
-//             object.rotation.set(0.3, 0.6, 3.5);
-
-//             object.traverse( function ( child ) {
-//                 if ( child instanceof THREE.Mesh ) {
-//                     console.log(child);
-//                     child.material.side = THREE.FrontSide;    
-                    
-//                     if (child.name === 'Mark') {
-//                         child.material = redMaterial  
-//                     }
-//                     if (child.name === 'Earthdots') {
-//                         child.material = whiteMaterial  
-//                     }
-//                 }
-//             });
-
-//             EarthObj.add(object)
-//         }, (xhr) => {
-//             const loadedVal = `loaded: ${Math.floor(100.0 * xhr.loaded / xhr.total)}%`;
-//             console.log(loadedVal);
-//             document.querySelector('.loader').innerHTML = loadedVal;
-//         }
-        
-//         );
-//         scene.add(EarthObj)
-
-//         window.addEventListener('resize', onCanvasResize)
-
-//         animate()
+        animate();
     }
 }
 
+function BovieSceneInit(){
+    canvas = document.getElementById('Canvas3D');
+    const canvasWrapper = document.getElementById('Wrapper3D');
+    scene3DScene.width = canvasWrapper.getBoundingClientRect().width;
+    scene3DScene.height = canvasWrapper.getBoundingClientRect().height;
+    canvas.width = scene3DScene.width;
+    canvas.height = scene3DScene.height;
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera( 45, scene3DScene.width / scene3DScene.height, 0.1, settings3D.camera.deep );
+    camera.position.x = settings3D.camera.posX;
+    camera.position.y = settings3D.camera.posY;
+    camera.position.z = settings3D.camera.posZ;
+    scene.add(camera)
+
+    //lights
+    const light = new THREE.AmbientLight(0xffffff, 1.0);
+    light.position.set(0, 0, 0);
+    scene.add(light);
+
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+    renderer.setClearColor( 0xffffff, 0 ); 
+    // renderer.setPixelRatio( Math.min(window.devicePixelRatio, 1.5) );
+    renderer.setSize( scene3DScene.width, scene3DScene.height );
+};
+
 // function onCanvasResize() {
 //     const canvasWrapper = document.getElementById('canvasWrapper')
-//     sceneSize.width = canvasWrapper.getBoundingClientRect().width
-//     sceneSize.height = sceneSize.width / settings.aspectRatio
+//     scene3DScene.width = canvasWrapper.getBoundingClientRect().width
+//     scene3DScene.height = scene3DScene.width / settings.aspectRatio
     
-//     canvas.width = sceneSize.width;
-//     canvas.height = sceneSize.height;
+//     canvas.width = scene3DScene.width;
+//     canvas.height = scene3DScene.height;
     
-//     camera = new THREE.PerspectiveCamera( 50, sceneSize.width / sceneSize.height, 0.1, settings.camera.deep );
+//     camera = new THREE.PerspectiveCamera( 50, scene3DScene.width / scene3DScene.height, 0.1, settings.camera.deep );
 //     camera.position.y = settings.camera.posY;
 //     camera.position.z = settings.camera.posZ;
     
-//     renderer.setSize( sceneSize.width, sceneSize.height );
+//     renderer.setSize( scene3DScene.width, scene3DScene.height );
 // }
 
 // window.addEventListener('mousemove', e => {
@@ -100,21 +85,9 @@ class App {
 //     deltaX = EarthObj.rotation.x + newDeltaX
 // });
 
-// function animate() {
-//     const step = .01
-//     const damping = .00001
-//     //for scroll-x rotation
-//     if (Math.abs(deltaX - currentDeltaX) > step) {
-//         currentDeltaX = currentDeltaX + (deltaX - currentDeltaX) * step
-//     } else {
-//         currentDeltaX = currentDeltaX + (deltaX - currentDeltaX) * (deltaX - currentDeltaX) * (deltaX - currentDeltaX) * damping
-//     }
-//     EarthObj.rotation.y = currentDeltaX * Math.PI
-    
-//     // camera.updateMatrixWorld();    
-//     // camera.updateProjectionMatrix();
-//     renderer.render(scene, camera);
-//     requestAnimationFrame(animate);
-// }
+function animate() {
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+}
 
 export default App;

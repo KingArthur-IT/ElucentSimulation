@@ -5,8 +5,37 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elucent</title>
+    <style>
+        .wrapper{
+            width: 850px;
+            height: 450px;
+            display: flex;
+            align-items: stretch;
+            justify-content: space-between;
+            border: 1px solid;
+        }
+        .left-hero{
+            height: 100%;
+        }
+        .right-hero{
+            height: 100%;
+            width: 300px;
+        }
+        #Canvas3D{
+            height: 100%;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
-    Elucent
+    <div class="wrapper">
+        <div class="left-hero">
+
+        </div>
+        <div id="Wrapper3D" class="right-hero">
+            <canvas id="Canvas3D"></canvas>
+        </div>
+    </div>
 </body>
+<script src="./build/bundle.js"></script>
 </html>
