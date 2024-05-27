@@ -41470,16 +41470,71 @@ void main() {
 	    scene.add(Obj);
 	}
 
-	var canvas, scene, camera, renderer, 
-	scene3DScene = {
+	function drawScale(canvas, offset, numDivisions, min, max, value){
+	    const ctx = canvas.getContext('2d');
+
+	    //draw scale
+	    const divisionLength = (canvas.height - 2 * offset) / numDivisions;
+
+	    ctx.font = '16px Arial';
+	    ctx.textAlign = 'center';
+
+	    for (let i = 0; i <= numDivisions; i++) {
+	        const y = offset + i * divisionLength;
+
+	        const isFirstOrLast = i === 0 || i === numDivisions;
+	        const lineHight = isFirstOrLast ? 3 : 2;
+	        const lineOffset = isFirstOrLast ? 0 : 3;
+	        const lineWidth = 20 - 2 * lineOffset;
+
+	        ctx.lineWidth = lineHight;
+	        
+	        ctx.beginPath();
+	        ctx.moveTo(offset + lineOffset, y);
+	        ctx.lineTo(offset + lineOffset + lineWidth, y);
+	        ctx.stroke();
+
+	        if (i === 0) {
+	            ctx.fillText('A', offset + lineWidth / 2, offset - 5);
+	        }        if (i === numDivisions) {
+	            ctx.fillText('P', offset + lineWidth / 2, canvas.height - offset * 0.65);
+	        }    }    ctx.font = '16px Arial';
+	    ctx.textAlign = 'center';
+	    {
+	        ctx.fillText('0', offset - 7, canvas.height / 2 + 5);
+	    }
+
+	    //draw pointer
+	    {
+	        const pointerPointY = offset + (value - min) * (canvas.height - 2 * offset) / (max - min);
+	        const pointerSize = 12;
+	    
+	        ctx.beginPath();
+	        ctx.moveTo(offset - 5, pointerPointY);
+	        ctx.lineTo(offset - 5 - pointerSize, pointerPointY + pointerSize / 1.5);
+	        ctx.lineTo(offset - 5 - pointerSize, pointerPointY - pointerSize / 1.5);
+	        ctx.closePath();
+	    
+	        ctx.fill();
+	        ctx.fillText(value, offset - pointerSize - 18, pointerPointY + 5);
+	    }
+	}
+
+	var canvas3D, scene, camera, renderer, 
+	scene3D = {
 	    width: 300,
+	    height: 450,
+	},
+	canvas2D,
+	scene2D = {
+	    width: 400,
 	    height: 450,
 	};
 
 	class App {
 	    init() {
+	        //init 3d scene
 	        BovieSceneInit();
-	        // addBovieSceneObjects();
 	        addFBXObjectToScene(
 	            scene,
 	            settings3D.bovieModel.fileName,
@@ -41499,22 +41554,30 @@ void main() {
 	            settings3D.bodyModel.rotation,
 	        );
 
-	        // window.addEventListener('resize', onCanvasResize)
+	        //init 2d scene
+	        canvas2D = document.getElementById('Canvas2D');
+	        const canvasWrapper = document.getElementById('wrapper2D');
+	        scene2D.width = canvasWrapper.getBoundingClientRect().width;
+	        scene2D.height = canvasWrapper.getBoundingClientRect().height;
+	        canvas2D.width = scene2D.width;
+	        canvas2D.height = scene2D.height;
+
+	        drawScale(canvas2D, 50, 6, 30, -30, 24);
 
 	        animate();
 	    }
 	}
 
 	function BovieSceneInit(){
-	    canvas = document.getElementById('Canvas3D');
-	    const canvasWrapper = document.getElementById('Wrapper3D');
-	    scene3DScene.width = canvasWrapper.getBoundingClientRect().width;
-	    scene3DScene.height = canvasWrapper.getBoundingClientRect().height;
-	    canvas.width = scene3DScene.width;
-	    canvas.height = scene3DScene.height;
+	    canvas3D = document.getElementById('Canvas3D');
+	    const canvasWrapper = document.getElementById('wrapper3D');
+	    scene3D.width = canvasWrapper.getBoundingClientRect().width;
+	    scene3D.height = canvasWrapper.getBoundingClientRect().height;
+	    canvas3D.width = scene3D.width;
+	    canvas3D.height = scene3D.height;
 
 	    scene = new Scene();
-	    camera = new PerspectiveCamera( 45, scene3DScene.width / scene3DScene.height, 0.1, settings3D.camera.deep );
+	    camera = new PerspectiveCamera( 45, scene3D.width / scene3D.height, 0.1, settings3D.camera.deep );
 	    camera.position.x = settings3D.camera.posX;
 	    camera.position.y = settings3D.camera.posY;
 	    camera.position.z = settings3D.camera.posZ;
@@ -41525,32 +41588,11 @@ void main() {
 	    light.position.set(0, 0, 0);
 	    scene.add(light);
 
-	    renderer = new WebGLRenderer({ canvas: canvas, antialias: true });
+	    renderer = new WebGLRenderer({ canvas: canvas3D, antialias: true });
 	    renderer.setClearColor( 0xffffff, 0 ); 
 	    // renderer.setPixelRatio( Math.min(window.devicePixelRatio, 1.5) );
-	    renderer.setSize( scene3DScene.width, scene3DScene.height );
+	    renderer.setSize( scene3D.width, scene3D.height );
 	}
-	// function onCanvasResize() {
-	//     const canvasWrapper = document.getElementById('canvasWrapper')
-	//     scene3DScene.width = canvasWrapper.getBoundingClientRect().width
-	//     scene3DScene.height = scene3DScene.width / settings.aspectRatio
-	    
-	//     canvas.width = scene3DScene.width;
-	//     canvas.height = scene3DScene.height;
-	    
-	//     camera = new THREE.PerspectiveCamera( 50, scene3DScene.width / scene3DScene.height, 0.1, settings.camera.deep );
-	//     camera.position.y = settings.camera.posY;
-	//     camera.position.z = settings.camera.posZ;
-	    
-	//     renderer.setSize( scene3DScene.width, scene3DScene.height );
-	// }
-
-	// window.addEventListener('mousemove', e => {
-	//     const newDeltaX = Math.sign(e.x - mouseData.x) * settings.moveStep.x
-	//     mouseData.x = e.x
-	//     deltaX = EarthObj.rotation.x + newDeltaX
-	// });
-
 	function animate() {
 	    renderer.render(scene, camera);
 	    requestAnimationFrame(animate);
