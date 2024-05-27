@@ -12,7 +12,6 @@ scene3DScene = {
 class App {
     init() {
         BovieSceneInit();
-        // addBovieSceneObjects();
         addFBXObjectToScene(
             scene,
             settings3D.bovieModel.fileName,
@@ -31,8 +30,6 @@ class App {
             settings3D.bodyModel.scale,
             settings3D.bodyModel.rotation,
         );
-
-        // window.addEventListener('resize', onCanvasResize)
 
         animate();
     }
@@ -54,7 +51,7 @@ function BovieSceneInit(){
     scene.add(camera)
 
     //lights
-    const light = new THREE.AmbientLight(0xffffff, 1.0);
+    const light = new THREE.AmbientLight(0xffffff, 3.0);
     light.position.set(0, 0, 0);
     scene.add(light);
 
@@ -63,27 +60,6 @@ function BovieSceneInit(){
     // renderer.setPixelRatio( Math.min(window.devicePixelRatio, 1.5) );
     renderer.setSize( scene3DScene.width, scene3DScene.height );
 };
-
-// function onCanvasResize() {
-//     const canvasWrapper = document.getElementById('canvasWrapper')
-//     scene3DScene.width = canvasWrapper.getBoundingClientRect().width
-//     scene3DScene.height = scene3DScene.width / settings.aspectRatio
-    
-//     canvas.width = scene3DScene.width;
-//     canvas.height = scene3DScene.height;
-    
-//     camera = new THREE.PerspectiveCamera( 50, scene3DScene.width / scene3DScene.height, 0.1, settings.camera.deep );
-//     camera.position.y = settings.camera.posY;
-//     camera.position.z = settings.camera.posZ;
-    
-//     renderer.setSize( scene3DScene.width, scene3DScene.height );
-// }
-
-// window.addEventListener('mousemove', e => {
-//     const newDeltaX = Math.sign(e.x - mouseData.x) * settings.moveStep.x
-//     mouseData.x = e.x
-//     deltaX = EarthObj.rotation.x + newDeltaX
-// });
 
 function animate() {
     renderer.render(scene, camera);

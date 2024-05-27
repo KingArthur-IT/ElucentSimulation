@@ -5,32 +5,26 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elucent</title>
-    <style>
-        .wrapper{
-            width: 850px;
-            height: 450px;
-            display: flex;
-            align-items: stretch;
-            justify-content: space-between;
-            border: 1px solid;
-        }
-        .left-hero{
-            height: 100%;
-        }
-        .right-hero{
-            height: 100%;
-            width: 300px;
-        }
-        #Canvas3D{
-            height: 100%;
-            width: 100%;
-        }
-    </style>
+    <link rel="stylesheet" href="./styles/style.css">
 </head>
 <body>
     <div class="wrapper">
         <div class="left-hero">
-
+            <div id="wrapper2D">
+                <canvas id="Canvas2D"></canvas>
+            </div>
+            <div class="hudInfoWrapper">
+                <div class="text">Tip is:</div>
+                <ul>
+                    <li><span>26</span>Anterior</li>
+                    <li><span>2</span>Medial</li>
+                    <li><span>1</span>Superior</li>
+                </ul>
+                <div class="text">Distances:</div>
+                <ul>
+                    <li><span>26</span>Tip to Purple</li>
+                </ul>
+            </div>
         </div>
         <div id="Wrapper3D" class="right-hero">
             <canvas id="Canvas3D"></canvas>
