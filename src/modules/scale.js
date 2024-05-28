@@ -1,5 +1,8 @@
+import { drawImage } from './base2DFuncs'
+
 function drawScale(canvas, offset, numDivisions, min, max, value){
     const ctx = canvas.getContext('2d');
+    const divisionsWidth = 20;
 
     //draw scale
     const divisionLength = (canvas.height - 2 * offset) / numDivisions;
@@ -13,7 +16,7 @@ function drawScale(canvas, offset, numDivisions, min, max, value){
         const isFirstOrLast = i === 0 || i === numDivisions;
         const lineHight = isFirstOrLast ? 3 : 2;
         const lineOffset = isFirstOrLast ? 0 : 3;
-        const lineWidth = 20 - 2 * lineOffset;
+        const lineWidth = divisionsWidth - 2 * lineOffset;
 
         ctx.lineWidth = lineHight;
         
@@ -44,11 +47,21 @@ function drawScale(canvas, offset, numDivisions, min, max, value){
         ctx.moveTo(offset - 5, pointerPointY);
         ctx.lineTo(offset - 5 - pointerSize, pointerPointY + pointerSize / 1.5);
         ctx.lineTo(offset - 5 - pointerSize, pointerPointY - pointerSize / 1.5);
-        ctx.closePath();
     
         ctx.fill();
         ctx.fillText(value, offset - pointerSize - 18, pointerPointY + 5);
+        ctx.closePath();
     }
+
+    //draw person icon
+    drawImage(ctx, 
+        { w: 20, h: 16 },
+        './assets/Images/personIcon.png', 
+        {
+            x: offset + divisionsWidth + 20 / 2, 
+            y: canvas.height / 2
+        }
+    );
 }
 
 export { drawScale }

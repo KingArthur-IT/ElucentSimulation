@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { settings3D } from './modules/settings'
 import { addFBXObjectToScene } from './modules/addObjects'
 import { drawScale } from './modules/scale'
+import { drawHud } from './modules/hud'
 
 var canvas3D, scene, camera, renderer, 
 scene3D = {
@@ -47,6 +48,7 @@ class App {
         canvas2D.height = scene2D.height;
 
         drawScale(canvas2D, 50, 6, 30, -30, 24);
+        drawHud(canvas2D, 50);
 
         animate();
     }

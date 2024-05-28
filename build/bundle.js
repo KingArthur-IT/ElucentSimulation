@@ -41470,8 +41470,26 @@ void main() {
 	    scene.add(Obj);
 	}
 
+	function drawArc(ctx, center, radius, color, width = 1){
+	    ctx.lineWidth = width;
+	    ctx.strokeStyle = color;
+	    
+	    ctx.beginPath();
+	    ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
+	    ctx.stroke();
+	    ctx.closePath();
+	}
+	function drawImage(ctx, size, imagePath, center){
+	    const img = new Image();
+	    img.src = imagePath;
+	    img.onload = function() {
+	        ctx.drawImage(img, center.x - size.w / 2, center.y - size.h / 2, size.w, size.h);
+	    };
+	}
+
 	function drawScale(canvas, offset, numDivisions, min, max, value){
 	    const ctx = canvas.getContext('2d');
+	    const divisionsWidth = 20;
 
 	    //draw scale
 	    const divisionLength = (canvas.height - 2 * offset) / numDivisions;
@@ -41485,7 +41503,7 @@ void main() {
 	        const isFirstOrLast = i === 0 || i === numDivisions;
 	        const lineHight = isFirstOrLast ? 3 : 2;
 	        const lineOffset = isFirstOrLast ? 0 : 3;
-	        const lineWidth = 20 - 2 * lineOffset;
+	        const lineWidth = divisionsWidth - 2 * lineOffset;
 
 	        ctx.lineWidth = lineHight;
 	        
@@ -41513,11 +41531,37 @@ void main() {
 	        ctx.moveTo(offset - 5, pointerPointY);
 	        ctx.lineTo(offset - 5 - pointerSize, pointerPointY + pointerSize / 1.5);
 	        ctx.lineTo(offset - 5 - pointerSize, pointerPointY - pointerSize / 1.5);
-	        ctx.closePath();
 	    
 	        ctx.fill();
 	        ctx.fillText(value, offset - pointerSize - 18, pointerPointY + 5);
+	        ctx.closePath();
 	    }
+
+	    //draw person icon
+	    drawImage(ctx, 
+	        { w: 20, h: 16 },
+	        './assets/Images/personIcon.png', 
+	        {
+	            x: offset + divisionsWidth + 20 / 2, 
+	            y: canvas.height / 2
+	        }
+	    );
+	}
+
+	function drawHud(canvas, offset){
+	    const ctx = canvas.getContext('2d');
+	    const center = {
+	        x: (canvas.width - offset) / 2 + offset,
+	        y: canvas.height / 2,
+	    };
+
+	    //draw icon
+	    drawImage(ctx, { w: 50, h: 50 }, './assets/Images/icon.png', center);
+
+	    //draw arcs
+	    drawArc(ctx, center, 130, 'gray');
+	    drawArc(ctx, center, 90, 'gray');
+	    drawArc(ctx, center, 50, 'gray');
 	}
 
 	var canvas3D, scene, camera, renderer, 
@@ -41563,6 +41607,7 @@ void main() {
 	        canvas2D.height = scene2D.height;
 
 	        drawScale(canvas2D, 50, 6, 30, -30, 24);
+	        drawHud(canvas2D, 50);
 
 	        animate();
 	    }
