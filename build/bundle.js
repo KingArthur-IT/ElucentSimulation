@@ -36267,6 +36267,125 @@ void main() {
 
 	];
 
+	const _matrix = /*@__PURE__*/ new Matrix4();
+
+	class Raycaster {
+
+		constructor( origin, direction, near = 0, far = Infinity ) {
+
+			this.ray = new Ray( origin, direction );
+			// direction is assumed to be normalized (for accurate distance calculations)
+
+			this.near = near;
+			this.far = far;
+			this.camera = null;
+			this.layers = new Layers();
+
+			this.params = {
+				Mesh: {},
+				Line: { threshold: 1 },
+				LOD: {},
+				Points: { threshold: 1 },
+				Sprite: {}
+			};
+
+		}
+
+		set( origin, direction ) {
+
+			// direction is assumed to be normalized (for accurate distance calculations)
+
+			this.ray.set( origin, direction );
+
+		}
+
+		setFromCamera( coords, camera ) {
+
+			if ( camera.isPerspectiveCamera ) {
+
+				this.ray.origin.setFromMatrixPosition( camera.matrixWorld );
+				this.ray.direction.set( coords.x, coords.y, 0.5 ).unproject( camera ).sub( this.ray.origin ).normalize();
+				this.camera = camera;
+
+			} else if ( camera.isOrthographicCamera ) {
+
+				this.ray.origin.set( coords.x, coords.y, ( camera.near + camera.far ) / ( camera.near - camera.far ) ).unproject( camera ); // set origin in plane of camera
+				this.ray.direction.set( 0, 0, - 1 ).transformDirection( camera.matrixWorld );
+				this.camera = camera;
+
+			} else {
+
+				console.error( 'THREE.Raycaster: Unsupported camera type: ' + camera.type );
+
+			}
+
+		}
+
+		setFromXRController( controller ) {
+
+			_matrix.identity().extractRotation( controller.matrixWorld );
+
+			this.ray.origin.setFromMatrixPosition( controller.matrixWorld );
+			this.ray.direction.set( 0, 0, - 1 ).applyMatrix4( _matrix );
+
+			return this;
+
+		}
+
+		intersectObject( object, recursive = true, intersects = [] ) {
+
+			intersect( object, this, intersects, recursive );
+
+			intersects.sort( ascSort );
+
+			return intersects;
+
+		}
+
+		intersectObjects( objects, recursive = true, intersects = [] ) {
+
+			for ( let i = 0, l = objects.length; i < l; i ++ ) {
+
+				intersect( objects[ i ], this, intersects, recursive );
+
+			}
+
+			intersects.sort( ascSort );
+
+			return intersects;
+
+		}
+
+	}
+
+	function ascSort( a, b ) {
+
+		return a.distance - b.distance;
+
+	}
+
+	function intersect( object, raycaster, intersects, recursive ) {
+
+		if ( object.layers.test( raycaster.layers ) ) {
+
+			object.raycast( raycaster, intersects );
+
+		}
+
+		if ( recursive === true ) {
+
+			const children = object.children;
+
+			for ( let i = 0, l = children.length; i < l; i ++ ) {
+
+				intersect( children[ i ], raycaster, intersects, true );
+
+			}
+
+		}
+
+	}
+
 	if ( typeof __THREE_DEVTOOLS__ !== 'undefined' ) {
 
 		__THREE_DEVTOOLS__.dispatchEvent( new CustomEvent( 'register', { detail: {
@@ -36300,18 +36419,43 @@ void main() {
 	        modelPath: './assets/Models/bovie/',
 	        fileName: 'bovie.fbx',
 	        name: 'bovie',
-	        position: new Vector3(0.0, 0.0, 0.0),
-			rotation: new Vector3(Math.PI * 0.5, Math.PI * 0.0, Math.PI * 0.0),
+	        position: new Vector3(0.0, 0.0, 0.2),
+			rotation: new Vector3(Math.PI * 110 / 180, Math.PI * 0.0, Math.PI * 0.0),
 			scale: 	  new Vector3(0.25, 0.25, 0.25),
+	        availableArea: {
+	            maxX: 0.1,
+	            minX: -0.65,
+	            minY: -0.1,
+	            maxY: 0.42,
+	            minZ: 0.05,
+	            maxZ: 0.05,
+	        },
 	    },
 	    bodyModel: {
 	        modelPath: './assets/Models/body/',
 	        fileName: 'body_drapes.fbx',
 	        name: 'body',
-	        position: new Vector3(0.9, 1.1, 0.0),
+	        position: new Vector3(0.9, 1.2, 0.0),
 			rotation: new Vector3(Math.PI * 0.5, Math.PI * 0.5, Math.PI * 0.0),
 			scale: 	  new Vector3(0.25, 0.25, 0.25),
-	    }
+	    },
+	    touchMouseStartArea: {
+	        center: { 
+	            x: 0.0,
+	            y: -0.7,
+	        },
+	        R: 0.1,
+	    },
+	};
+
+	const settings2D = {
+	    canvasId: 'Canvas2D',
+	    canvasWrapperId: 'wrapper2D',
+	    iconPath: './assets/Images/icon.png',
+	    boviePath: './assets/Images/HUD_bovie.png',
+	    bovieSize: { w: 15, h: 197 },
+	    activeColor: '#703E89',
+	    hubRadiuses: [217, 141, 65],
 	};
 
 	/*!
@@ -41470,6 +41614,43 @@ void main() {
 	    scene.add(Obj);
 	}
 
+	function move3DBovie(scene, newXPos, newYPos){
+	    const bovie = scene.getObjectByName(settings3D.bovieModel.name);
+	    const isMoved = { x: false, y: false };
+
+	    if (newXPos >= settings3D.bovieModel.availableArea.minX && newXPos <= settings3D.bovieModel.availableArea.maxX ){
+	        bovie.position.x = newXPos;
+	        isMoved.x = true;
+	    }    if (newYPos >= settings3D.bovieModel.availableArea.minY && newYPos <= settings3D.bovieModel.availableArea.maxY ){
+	        bovie.position.y = newYPos;
+	        isMoved.y = true;
+	    }
+	    return isMoved;
+	}
+	function set3DBovieNormal(scene3DMouse, scene, camera){
+	    const body = scene.getObjectByName(settings3D.bodyModel.name);
+	    const bovie = scene.getObjectByName(settings3D.bovieModel.name);
+
+	    const raycaster = new Raycaster();
+	    raycaster.setFromCamera(scene3DMouse, camera);
+	    const intersects = raycaster.intersectObject(body, true);
+
+	    if (intersects.length > 0) {
+	        const intersection = intersects[0];
+	        // console.log('intersection', intersection);
+
+	        // bovie.position.z += intersection.distance;
+	        // console.log('intersection.distance', intersection.distance);
+
+	        const normal = intersection.face.normal.clone().normalize();
+	        
+	        const lookAtPoint = intersection.point.clone().add(normal);
+	        bovie.lookAt(lookAtPoint);
+	        bovie.rotation.x = settings3D.bovieModel.rotation.x;
+	        bovie.rotation.y = settings3D.bovieModel.rotation.y;
+	    }
+	}
+
 	function drawArc(ctx, center, radius, color, width = 1){
 	    ctx.lineWidth = width;
 	    ctx.strokeStyle = color;
@@ -41479,26 +41660,30 @@ void main() {
 	    ctx.stroke();
 	    ctx.closePath();
 	}
-	function drawImage(ctx, size, imagePath, center){
+	function drawImage(ctx, size, imagePath, center, angle = 0){
 	    const img = new Image();
 	    img.src = imagePath;
 	    img.onload = function() {
-	        ctx.drawImage(img, center.x - size.w / 2, center.y - size.h / 2, size.w, size.h);
+	        ctx.save();
+	        ctx.translate(center.x - size.w / 2, center.y - size.h / 2);
+	        ctx.rotate(angle);
+	        ctx.drawImage(img, 0, 0, size.w, size.h);
+	        ctx.restore();
 	    };
 	}
 
-	function drawScale(canvas, offset, numDivisions, min, max, value){
+	function drawScale(canvas, offsetX, offsetY, numDivisions, { min, max, value }){
 	    const ctx = canvas.getContext('2d');
 	    const divisionsWidth = 20;
 
 	    //draw scale
-	    const divisionLength = (canvas.height - 2 * offset) / numDivisions;
+	    const divisionLength = (canvas.height - 2 * offsetY) / numDivisions;
 
 	    ctx.font = '16px Arial';
 	    ctx.textAlign = 'center';
 
 	    for (let i = 0; i <= numDivisions; i++) {
-	        const y = offset + i * divisionLength;
+	        const y = offsetY + i * divisionLength;
 
 	        const isFirstOrLast = i === 0 || i === numDivisions;
 	        const lineHight = isFirstOrLast ? 3 : 2;
@@ -41508,111 +41693,166 @@ void main() {
 	        ctx.lineWidth = lineHight;
 	        
 	        ctx.beginPath();
-	        ctx.moveTo(offset + lineOffset, y);
-	        ctx.lineTo(offset + lineOffset + lineWidth, y);
+	        ctx.moveTo(offsetX + lineOffset, y);
+	        ctx.lineTo(offsetX + lineOffset + lineWidth, y);
 	        ctx.stroke();
 
 	        if (i === 0) {
-	            ctx.fillText('A', offset + lineWidth / 2, offset - 5);
+	            ctx.fillText('A', offsetX + lineWidth / 2, offsetY - 5);
 	        }        if (i === numDivisions) {
-	            ctx.fillText('P', offset + lineWidth / 2, canvas.height - offset * 0.65);
+	            ctx.fillText('P', offsetX + lineWidth / 2, canvas.height - offsetY + 18);
 	        }    }    ctx.font = '16px Arial';
 	    ctx.textAlign = 'center';
-	    {
-	        ctx.fillText('0', offset - 7, canvas.height / 2 + 5);
+	    if (value !== 0){
+	        ctx.fillText('0', offsetX - 7, canvas.height / 2 + 5);
 	    }
 
 	    //draw pointer
-	    {
-	        const pointerPointY = offset + (value - min) * (canvas.height - 2 * offset) / (max - min);
+	    if (value >= min && value <= max){
+	        const pointerPointY = offsetY + (value - max) * (canvas.height - 2 * offsetY) / (min - max);
 	        const pointerSize = 12;
 	    
 	        ctx.beginPath();
-	        ctx.moveTo(offset - 5, pointerPointY);
-	        ctx.lineTo(offset - 5 - pointerSize, pointerPointY + pointerSize / 1.5);
-	        ctx.lineTo(offset - 5 - pointerSize, pointerPointY - pointerSize / 1.5);
+	        ctx.moveTo(offsetX - 5, pointerPointY);
+	        ctx.lineTo(offsetX - 5 - pointerSize, pointerPointY + pointerSize / 1.5);
+	        ctx.lineTo(offsetX - 5 - pointerSize, pointerPointY - pointerSize / 1.5);
 	    
 	        ctx.fill();
-	        ctx.fillText(value, offset - pointerSize - 18, pointerPointY + 5);
+	        ctx.fillText(value, offsetX - pointerSize - 18, pointerPointY + 5);
 	        ctx.closePath();
 	    }
 
 	    //draw person icon
 	    drawImage(ctx, 
-	        { w: 20, h: 16 },
+	        { w: 24, h: 20 },
 	        './assets/Images/personIcon.png', 
 	        {
-	            x: offset + divisionsWidth + 20 / 2, 
+	            x: offsetX + divisionsWidth + 20 / 2, 
 	            y: canvas.height / 2
 	        }
 	    );
 	}
 
-	function drawHud(canvas, offset){
-	    const ctx = canvas.getContext('2d');
+	function drawHud(mainCanvas, leftOffset, bovieDisplacement){
+	    const mainContext = mainCanvas.getContext('2d', { antialias: true });
+
 	    const center = {
-	        x: (canvas.width - offset) / 2 + offset,
-	        y: canvas.height / 2,
+	        x: (mainCanvas.width - leftOffset) / 2 + leftOffset,
+	        y: mainCanvas.height / 2,
 	    };
 
-	    //draw icon
-	    drawImage(ctx, { w: 50, h: 50 }, './assets/Images/icon.png', center);
+	    const bufferCanvas = document.createElement('canvas');
+	    const scaleFactor = 2;
+	    bufferCanvas.width = mainCanvas.width * scaleFactor;
+	    bufferCanvas.height = mainCanvas.height * scaleFactor;
+	    const bufferContext = bufferCanvas.getContext('2d', { antialias: true });
+	    bufferContext.scale(scaleFactor, scaleFactor);
 
+	    //find active radius index
+	    const bovieDistanceFromCenter = Math.sqrt(bovieDisplacement.x * bovieDisplacement.x + bovieDisplacement.y * bovieDisplacement.y);
+	    let maxActiveRadiusIndex = -1;
+	    settings2D.hubRadiuses.forEach((r, index) => {
+	        if (bovieDistanceFromCenter < r){
+	            maxActiveRadiusIndex = index;
+	        }    });
 	    //draw arcs
-	    drawArc(ctx, center, 130, 'gray');
-	    drawArc(ctx, center, 90, 'gray');
-	    drawArc(ctx, center, 50, 'gray');
+	    settings2D.hubRadiuses.forEach((r, index) => {
+	        const color = index === maxActiveRadiusIndex ? settings2D.activeColor : 'gray';
+	        drawArc(bufferContext, center, r, color);
+	    });
+
+	    mainContext.drawImage(bufferCanvas, 0, 0, bufferCanvas.width, bufferCanvas.height,
+	        0, 0, mainCanvas.width, mainCanvas.height);
+
+	    //draw icon only when init
+	    drawImage(mainContext, { w: 52, h: 90 }, settings2D.iconPath, center);
 	}
 
+	function drawHudBovie(mainCanvas, leftOffset, displacement){
+	    const mainContext = mainCanvas.getContext('2d', { antialias: true });
+
+	    const center = {
+	        x: (mainCanvas.width - leftOffset) / 2 + leftOffset,
+	        y: mainCanvas.height / 2,
+	    };
+
+	    drawImage(
+	        mainContext, 
+	        settings2D.bovieSize, 
+	        settings2D.boviePath, 
+	        {
+	            x: center.x + displacement.x,
+	            y: center.y + settings2D.bovieSize.h / 2 + displacement.y
+	        },
+	        displacement.angle
+	    );
+
+	    //draw line between center and bovie pointer
+	    // const cosTheta = Math.cos(displacement.angle);
+	    // const sinTheta = Math.sin(displacement.angle);
+	    // console.log(cosTheta, sinTheta);
+	    const boviePointer = {
+	        x: center.x + displacement.x,
+	        y: center.y + displacement.y
+	    };
+
+	    mainContext.beginPath();
+	    mainContext.lineWidth = 10;
+	    mainContext.strokeStyle = settings2D.activeColor + '99'; //opacity 60%
+	    mainContext.lineCap = "round";
+	    mainContext.moveTo(center.x, center.y);
+	    mainContext.lineTo(boviePointer.x, boviePointer.y);
+	    mainContext.stroke();
+	    mainContext.closePath();
+	}
+
+	//3d
 	var canvas3D, scene, camera, renderer, 
 	scene3D = {
 	    width: 300,
 	    height: 450,
-	},
-	canvas2D,
-	scene2D = {
+	    isActive: false,
+	    mouse: { x: 0, y: 0 },
+	};
+
+	//2d
+	var canvas2D,
+	sceneSize2D = {
 	    width: 400,
 	    height: 450,
+	},
+	bovie2DDisplacement = {
+	    x: 10,
+	    y: -100,
+	    angle: -40 * Math.PI / 180,
+	},
+	scaleValues = {
+	    max: 30,
+	    min: -30,
+	    value: 20
 	};
 
 	class App {
 	    init() {
 	        //init 3d scene
 	        BovieSceneInit();
-	        addFBXObjectToScene(
-	            scene,
-	            settings3D.bovieModel.fileName,
-	            settings3D.bovieModel.modelPath,
-	            settings3D.bovieModel.name,
-	            settings3D.bovieModel.position,
-	            settings3D.bovieModel.scale,
-	            settings3D.bovieModel.rotation,
-	        );
-	        addFBXObjectToScene(
-	            scene,
-	            settings3D.bodyModel.fileName,
-	            settings3D.bodyModel.modelPath,
-	            settings3D.bodyModel.name,
-	            settings3D.bodyModel.position,
-	            settings3D.bodyModel.scale,
-	            settings3D.bodyModel.rotation,
-	        );
-
+	    
 	        //init 2d scene
-	        canvas2D = document.getElementById('Canvas2D');
-	        const canvasWrapper = document.getElementById('wrapper2D');
-	        scene2D.width = canvasWrapper.getBoundingClientRect().width;
-	        scene2D.height = canvasWrapper.getBoundingClientRect().height;
-	        canvas2D.width = scene2D.width;
-	        canvas2D.height = scene2D.height;
+	        HudSceneInit();
 
-	        drawScale(canvas2D, 50, 6, 30, -30, 24);
-	        drawHud(canvas2D, 50);
+	        //---------------mouse, touch events------------------
+	        canvas3D.addEventListener("mousedown",    mouseDownHandler);
+	        canvas3D.addEventListener("mousemove",    mouseMoveHandler);
+	        
+	        canvas3D.addEventListener("touchstart",   touchStartHandler);
+	        canvas3D.addEventListener("touchmove",    touchMoveHandler);    
+	        canvas3D.addEventListener("touchend",     touchEndHandler);
 
 	        animate();
 	    }
 	}
 
+	//--- Scenes init
 	function BovieSceneInit(){
 	    canvas3D = document.getElementById('Canvas3D');
 	    const canvasWrapper = document.getElementById('wrapper3D');
@@ -41637,7 +41877,167 @@ void main() {
 	    renderer.setClearColor( 0xffffff, 0 ); 
 	    // renderer.setPixelRatio( Math.min(window.devicePixelRatio, 1.5) );
 	    renderer.setSize( scene3D.width, scene3D.height );
+
+	    addFBXObjectToScene(
+	        scene,
+	        settings3D.bovieModel.fileName,
+	        settings3D.bovieModel.modelPath,
+	        settings3D.bovieModel.name,
+	        settings3D.bovieModel.position,
+	        settings3D.bovieModel.scale,
+	        settings3D.bovieModel.rotation,
+	    );
+	    addFBXObjectToScene(
+	        scene,
+	        settings3D.bodyModel.fileName,
+	        settings3D.bodyModel.modelPath,
+	        settings3D.bodyModel.name,
+	        settings3D.bodyModel.position,
+	        settings3D.bodyModel.scale,
+	        settings3D.bodyModel.rotation,
+	    );
 	}
+	function HudSceneInit(){
+	    canvas2D = document.getElementById(settings2D.canvasId);
+	    const canvasWrapper = document.getElementById(settings2D.canvasWrapperId);
+	    sceneSize2D.width = canvasWrapper.getBoundingClientRect().width;
+	    sceneSize2D.height = canvasWrapper.getBoundingClientRect().height;
+	    canvas2D.width = sceneSize2D.width;
+	    canvas2D.height = sceneSize2D.height;
+
+	    drawScale(canvas2D, 50, 30, 6, scaleValues);
+	    drawHud(canvas2D, 90, bovie2DDisplacement);
+	    setTimeout(() => {
+	        drawHudBovie(canvas2D, 90, bovie2DDisplacement);
+	    }, 0);
+	}
+
+	//---mouse events
+	function mouseDownHandler(e){
+	    if (!scene3D.isActive){//lock
+	        document.querySelector('.startText').classList.add('d-none');
+
+	        scene3D.isActive = true;
+	        scene3D.mouse.x = (e.offsetX / canvas3D.width) * 2 - 1;
+	        scene3D.mouse.y = - (e.offsetY / canvas3D.height) * 2 + 1;
+
+	        canvas3D.requestPointerLock = canvas3D.requestPointerLock ||
+	            canvas3D.mozRequestPointerLock ||
+	            canvas3D.webkitRequestPointerLock;
+	            canvas3D.requestPointerLock();
+
+	    } else { //unlock
+	        scene3D.isActive = false;
+	        document.exitPointerLock = document.exitPointerLock ||
+	            document.mozExitPointerLock ||
+	            document.webkitExitPointerLock;
+	        document.exitPointerLock();
+	    }
+	}
+	function mouseMoveHandler(e){
+	    // const raycaster = new THREE.Raycaster();
+	    // const body = scene.getObjectByName(settings3D.bovieModel.name);
+	    // const mouse = new THREE.Vector2();
+	    // mouse.x = (e.offsetX / canvas3D.width) * 2 - 1;
+	    // mouse.y = - (e.offsetY / canvas3D.height) * 2 + 1;
+	    // raycaster.setFromCamera(mouse, camera);
+	    // const intersects = raycaster.intersectObject(body, true);
+	    // if (intersects.length > 0) {
+	    //     const intersection = intersects[0];
+	    //     console.log(intersection);
+	    // }
+	    // console.log('e', mouse);
+
+	    if (!scene3D.isActive) return;
+
+	    let movementX = e.movementX ||
+	        e.mozMovementX ||
+	        e.webkitMovementX ||
+	        0;
+	    let movementY = e.movementY ||
+	        e.mozMovementY ||
+	        e.webkitMovementY ||
+	        0;
+
+	    const movementStep = 0.01;
+	    const bovie = scene.getObjectByName(settings3D.bovieModel.name);
+	    const currentPosition = bovie.position;
+	    const newXPos = currentPosition.x + movementX * movementStep;
+	    const newYPos = currentPosition.y - movementY * movementStep;
+
+	    const isMoved = move3DBovie(scene, newXPos, newYPos);
+
+	    if (isMoved.x){
+	        scene3D.mouse.x += 0.1 * movementX / canvas3D.width;
+	    }    if (isMoved.y){
+	        scene3D.mouse.y += 0.1 * movementY / canvas3D.height;
+	    }    console.log(scene3D.mouse);
+	    set3DBovieNormal(scene3D.mouse, scene, camera);
+	}
+
+	//--- touch events
+	function touchStartHandler(e){
+	    if (!scene3D.isActive){//lock
+	        document.querySelector('.startText').classList.add('d-none');
+	        const canvasOffset = document.querySelector('.left-panel').clientWidth;
+	        
+	        //touch position
+	        const evt = (typeof e.originalEvent === 'undefined') ? e : e.originalEvent;
+	        const touch = evt.touches[0] || evt.changedTouches[0];
+	        const xTouch = parseInt(touch.pageX - canvasOffset);
+	        const yTouch = parseInt(touch.pageY);
+	        const touchPoint = new Vector2((xTouch / canvas3D.width) * 2 - 1, - (yTouch / canvas3D.height) * 2 + 1);
+
+	        //calc distance between bovie pin center and touch point
+	        const boviePinCenter = new Vector2(settings3D.touchMouseStartArea.center.x, settings3D.touchMouseStartArea.center.y);
+	        const distanceToBoviePen = boviePinCenter.distanceTo(touchPoint);
+	    
+	        if (distanceToBoviePen < settings3D.touchMouseStartArea.R){
+	            scene3D.isActive = true;
+	            scene3D.mouse.x = touchPoint.x;
+	            scene3D.mouse.y = touchPoint.y;
+	        }    } else {//unlock
+	        scene3D.isActive = false;
+	    }
+	}
+
+	function touchMoveHandler(e){
+	    if (!scene3D.isActive) return;
+	    const canvasOffset = document.querySelector('.left-panel').clientWidth;
+
+	    //touch position
+	    const evt = (typeof e.originalEvent === 'undefined') ? e : e.originalEvent;
+	    const touch = evt.touches[0] || evt.changedTouches[0];
+	    const xTouch = parseInt(touch.pageX - canvasOffset);
+	    const yTouch = parseInt(touch.pageY);
+	    const touchPoint = new Vector2((xTouch / canvas3D.width) * 2 - 1, - (yTouch / canvas3D.height) * 2 + 1);
+
+	    const movementX = touchPoint.x - scene3D.mouse.x;
+	    const movementY = touchPoint.y - scene3D.mouse.y;
+
+	    const bovie = scene.getObjectByName(settings3D.bovieModel.name);
+	    const currentPosition = bovie.position;
+	    const newXPos = currentPosition.x + movementX;
+	    const newYPos = currentPosition.y + movementY;
+
+	    const isMoved = move3DBovie(scene, newXPos, newYPos);
+
+	    if (isMoved.x){
+	        scene3D.mouse.x = touchPoint.x;
+	    }    if (isMoved.y){
+	        scene3D.mouse.y = touchPoint.y;
+	    }    
+	    set3DBovieNormal({ x: scene3D.mouse.x * 0.1, y: scene3D.mouse.y * 0.1 }, scene, camera);
+	}
+
+	function touchEndHandler(){
+	    scene3D.isActive = false;
+	    const bovie = scene.getObjectByName(settings3D.bovieModel.name);
+	    bovie.position.copy(settings3D.bovieModel.position); 
+		bovie.rotation.setFromVector3(settings3D.bovieModel.rotation);
+	}
+
+	//---main loop
 	function animate() {
 	    renderer.render(scene, camera);
 	    requestAnimationFrame(animate);
